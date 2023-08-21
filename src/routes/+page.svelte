@@ -80,6 +80,17 @@ href="https://unpkg.com/carbon-components-svelte/css/g10.css"
 					if (e.tag !== 'valout') {
 						rnboConsole[e.tag] = e.payload;
 					}
+
+					if (e.tag === 'midi_events') {
+						const x = e.payload;
+						const [pitch, velocity] = x;
+						if (velocity > 0) {
+							port.send([0x90, pitch, velocity], window.performance.now());
+						} else {
+							port.send([0x80, pitch, velocity], window.performance.now());
+						}
+						
+					}
 				})
 				device.midiEvent.subscribe(ev => {
 					let type = ev.data[0];
