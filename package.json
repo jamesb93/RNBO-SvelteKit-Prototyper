@@ -24,6 +24,6 @@
 	},
 	"type": "module",
 	"dependencies": {
-		"@rnbo/js": "^1.1.0"
+		"@rnbo/js": "^1.1.2"
 	}
 }

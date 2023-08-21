@@ -8,6 +8,9 @@
 	let output;
 	let buffers = [];
 	let rnboConsole = {}
+	let midiAccess = null;
+	let port = null;
+
 
 	function loadDevice(audioContext, patchJSON) {
 		return new Promise((resolve, reject) => {
@@ -25,9 +28,21 @@
 	function initAudio() {
 		ctx = new (window.AudioContext || window.webkitAudioContext)();
 		output = ctx.createGain().connect(ctx.destination);
+		navigator.requestMIDIAccess()
+			.then(access => {
+				midiAccess = access;
+				const outputs = midiAccess.outputs.values();
+				for (const output of outputs) {
+					console.log(output.name)
+					if (output.name === 'to Max 1') {
+						port = output;
+					}
+				}
+			})
 	}
 
-	onMount(async() => {});
+	onMount(async() => {
+	});
 </script>
 
 <svelte:head>
@@ -64,6 +79,19 @@ href="https://unpkg.com/carbon-components-svelte/css/g10.css"
 				device.messageEvent.subscribe(e => {
 					if (e.tag !== 'valout') {
 						rnboConsole[e.tag] = e.payload;
+					}
+				})
+				device.midiEvent.subscribe(ev => {
+					let type = ev.data[0];
+
+					if (type >> 4 == 9) {
+						const pitch = ev.data[1];
+						const velocity = ev.data[2];
+						if (velocity > 0) {
+							port.send([0x90, pitch, velocity], window.performance.now());
+						} else {
+							port.send([0x80, pitch, velocity], window.performance.now());
+						}
 					}
 				})
 			})
